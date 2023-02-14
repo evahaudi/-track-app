@@ -22,12 +22,15 @@ import Scrollbar from '../components/scrollbar';
 import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 
 const TABLE_HEAD = [
-  { id: 'id', label: 'ID', alignRight: false },
-  { id: 'first_name', label: 'F.Name', alignRight: false },
-  { id: 'last_name', label: 'L.name', alignRight: false },
-  { id: 'department_name', label: 'Department', alignRight: false },
-  { id: 'email', label: 'Email', alignRight: false },
-  { id: '' },
+  // { id: 'id', label: 'ID', alignRight: false ,order:'ascending'},
+  { id: 'pinNo', label: 'KRA pin', alignRight: false },
+  { id: 'taxpayerName', label: 'taxPayer.N', alignRight: false },
+  { id: 'suppliersName', label: 'suppliers.N', alignRight: false },
+  { id: 'amntBeforeTax', label: 'AmountBeforeTax', alignRight: false },
+  { id: 'purchTotal', label: 'purchTotal', alignRight: false },
+ 
+ 
+  
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -54,12 +57,12 @@ function applySortFilter(array, comparator, query) {
     return a[1] - b[1];
   });
   if (query) {
-    return filter(array, (_user) => _user.first_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+    return filter(array, (_user) => _user.taxpayerName.toLowerCase().indexOf(query.toLowerCase()) !== -1);
   }
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function UserPage() {
+export default function VatPage() {
 
   const [page, setPage] = useState(0);
 
@@ -67,12 +70,12 @@ export default function UserPage() {
 
   const [selected, setSelected] = useState([]);
 
-  const [orderBy, setOrderBy] = useState('first_name');
+  const [orderBy, setOrderBy] = useState('id');
 
   const [filterName, setFilterName] = useState('');
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [tableData, setTableData] = useState([]);
+  const [customer, setCustomer] = useState([]);
 
   
   const handleRequestSort = (event, property) => {
@@ -83,18 +86,18 @@ export default function UserPage() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = tableData.map((n) => n.first_name);
+      const newSelecteds = customer.map((n) => n.id);
       setSelected(newSelecteds);
       return;
     }
     setSelected([]);
   };
 
-  const handleClick = (event, first_name) => {
-    const selectedIndex = selected.indexOf(first_name);
+  const handleClick = (event, id) => {
+    const selectedIndex = selected.indexOf(id);
     let newSelected = [];
     if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, first_name);
+      newSelected = newSelected.concat(selected, id);
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
     } else if (selectedIndex === selected.length - 1) {
@@ -111,42 +114,89 @@ export default function UserPage() {
 
   const handleChangeRowsPerPage = (event) => {
     setPage(0);
-    setRowsPerPage(parseInt(event.target.value, 10));
+    setRowsPerPage(parseInt(event.target.value, 5));
   };
 
   const handleFilterByName = (event) => {
     setPage(0);
     setFilterName(event.target.value);
   };
-  function handleRowClick(data,index) {
-    Swal.fire({
-      title: `More details  for ${data.first_name}`,
-      html: `<p><strongID: </strong>${index}</p><p><strong>FIRST NAME: </strong>${data.first_name}</p><p><strong>LAST NAME: </strong>${data.last_name}</p><p><strong>DEPARTMENT:</strong> ${data.department_name}<p/><p><strong>EMAIL:</strong> ${data.email}</p>`,
+  // function handleRowClick(data) {
+  //   Swal.fire({
+  //     title: `More details  for ${data.taxpayerName}`,
+  //     html: `<p>ID: ${data.id},\nPin: ${data.pinNo},\nTax payer: ${data.taxpayerName},\nInvoice: ${data.invoiceNo}`,
 
+  //   });
+  // }
+  function handleRowClick(data) {
+    const styles = document.createElement('style');
+    styles.innerHTML = '.swal2-container-custom-z-index { z-index: 9999 !important; }';
+    document.head.appendChild(styles);
+    
+    Swal.fire({
+      title: `More details for ${data.taxpayerName}`,
+      html: `
+        <div style="text-align: left;">
+          <p><strong>trpFromDt:</strong> ${data.trpFromDt}</p>
+        </div>
+        <div style="text-align: left;">
+          <p><strong>trpToDt:</strong> ${data.trpToDt}</p>
+        </div>
+        <div style="text-align: left;">
+          <p><strong>suppliersPin:</strong> ${data.suppliersPin}</p>
+        </div>
+        <div style="text-align: left;">
+          <p><strong>Invoice:</strong> ${data.invoiceNo}</p>
+        </div>
+        <div style="text-align: left;">
+          <p><strong>invoiceDate:</strong> ${data.invoiceDate}</p>
+        </div>
+        <div style="text-align: left;">
+          <p><strong>custEntryNo:</strong> ${data.custEntryNo}</p>
+        </div>
+        <div style="text-align: left;">
+          <p><strong>lookupCode:</strong> ${data.lookupCode}</p>
+        </div>
+        <div style="text-align: left;">
+          <p><strong>createdDt:</strong> ${data.createdDt}</p>
+        </div>
+        <div style="text-align: left;">
+          <p><strong>typeOfPurchases:</strong> ${data.typeOfPurchases}</p>
+        </div>`,
+      paddingTop:'20px',
+      showCloseButton: true,
+      customClass: {
+        container: 'swal2-container-custom-z-index'
+      },
+      showConfirmButton: false,
     });
   }
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - tableData.length) : 0;
 
-  const filteredUsers = applySortFilter(tableData, getComparator(order, orderBy), filterName);
+  
+ 
+  
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - customer.length) : 0;
+
+  const filteredUsers = applySortFilter(customer, getComparator(order, orderBy), filterName);
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
-  // useEffect(() => {
-  //   fetch("http://10.151.1.111:8000/employee_app/api/v1/Employee/")
-  //     .then((data) => data.json())
-  //     .then((data) => setTableData(data))
+//   useEffect(() => {
+//     fetch("http://10.153.1.85:8080/api/falseImports")
+//       .then((data) => data.json())
+//       .then((data) => setCustomer(data))
 
-  // }, []);
-  // console.log(tableData);
+//   }, []);
+//   console.log(customer);
 
   useEffect(() => {
-    fetch('http://10.151.1.111:8000/employee_app/api/v1/Employee/')
+    fetch("http://10.153.1.85:8080/api/falseImports")
       .then(response => response.json())
-      .then(json => setTableData(json.results))
+      .then(json => setCustomer(json.content))
       .catch(error => console.error(error));
   }, []);
-  console.log(tableData)
+  console.log(customer)
 
   return (
     <>
@@ -157,7 +207,7 @@ export default function UserPage() {
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            User
+            Customers
           </Typography>
         </Stack>
 
@@ -171,24 +221,24 @@ export default function UserPage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={tableData.length}
+                  rowCount={customer.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
 
         <TableBody>
-        {applySortFilter(tableData, getComparator(order, orderBy), filterName).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => {
-        const isItemSelected = selected.indexOf(row.first_name) !== -1;
+        {applySortFilter(customer, getComparator(order, orderBy), filterName).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => {
+        const isItemSelected = selected.indexOf(row.id) !== -1;
         const labelId = `table-checkbox-${index}`;
       return (
         <TableRow
           hover
-          onClick={(event) => handleClick(event, row.first_name)}
+          onClick={(event) => handleClick(event, row.id)}
           role="checkbox"
           aria-checked={isItemSelected}
           tabIndex={-1}
-          key={row.first_name}
+          key={row.id}
           selected={isItemSelected}
         >
           <TableCell padding="checkbox">
@@ -197,13 +247,17 @@ export default function UserPage() {
               inputProps={{ 'aria-labelledby': labelId }}
             />
           </TableCell>
-          <TableCell>{index+1}</TableCell>
+         
+          {/* <TableCell>{row.id}</TableCell> */}
+          <TableCell>{row.pinNo}</TableCell>
           <TableCell component="th" id={labelId} scope="row">
-            {row.first_name}
+            {row.taxpayerName}
           </TableCell>
-          <TableCell>{row.last_name}</TableCell>
-          <TableCell>{row.department_name}</TableCell>
-          <TableCell>{row.email}</TableCell>
+          <TableCell>{row.suppliersName}</TableCell>
+          {/* <TableCell>{row.suppliersPin}</TableCell> */}
+          <TableCell>{row.amntBeforeTax}</TableCell>
+          <TableCell>{row.purchTotal}</TableCell>
+        
          
           <TableCell>
             <Button  variant="contained" onClick={() => handleRowClick(row)}>view details</Button>
@@ -240,9 +294,9 @@ export default function UserPage() {
           </Scrollbar>
 
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
+            rowsPerPageOptions={[5, 100, 1000000000000000000000000000000000000000000000000]}
             component="div"
-            count={tableData.length}
+            count={customer.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

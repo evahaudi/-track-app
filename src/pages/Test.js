@@ -22,14 +22,12 @@ import Scrollbar from '../components/scrollbar';
 import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 
 const TABLE_HEAD = [
-  { id: 'id', label: 'ID', alignRight: false },
   { id: 'first_name', label: 'F.Name', alignRight: false },
   { id: 'last_name', label: 'L.name', alignRight: false },
   { id: 'department_name', label: 'Department', alignRight: false },
   { id: 'email', label: 'Email', alignRight: false },
   { id: '' },
 ];
-
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
     return -1;
@@ -74,7 +72,18 @@ export default function UserPage() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [tableData, setTableData] = useState([]);
 
-  
+  const successAlert = () => {
+    
+    Swal.fire({  
+        title: 'MORE DETAILS!',  
+        text1: 'first_name is:',
+        text2: 'last_name is:',
+        text3: 'department is:',
+        text4: 'email is:',
+        icon: 'success'
+      }); 
+  }
+
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -118,13 +127,6 @@ export default function UserPage() {
     setPage(0);
     setFilterName(event.target.value);
   };
-  function handleRowClick(data,index) {
-    Swal.fire({
-      title: `More details  for ${data.first_name}`,
-      html: `<p><strongID: </strong>${index}</p><p><strong>FIRST NAME: </strong>${data.first_name}</p><p><strong>LAST NAME: </strong>${data.last_name}</p><p><strong>DEPARTMENT:</strong> ${data.department_name}<p/><p><strong>EMAIL:</strong> ${data.email}</p>`,
-
-    });
-  }
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - tableData.length) : 0;
 
@@ -132,21 +134,13 @@ export default function UserPage() {
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
-  // useEffect(() => {
-  //   fetch("http://10.151.1.111:8000/employee_app/api/v1/Employee/")
-  //     .then((data) => data.json())
-  //     .then((data) => setTableData(data))
-
-  // }, []);
-  // console.log(tableData);
-
   useEffect(() => {
-    fetch('http://10.151.1.111:8000/employee_app/api/v1/Employee/')
-      .then(response => response.json())
-      .then(json => setTableData(json.results))
-      .catch(error => console.error(error));
+    fetch("http://10.151.1.111:8000/employee_app/api/v1/Employee/")
+      .then((data) => data.json())
+      .then((data) => setTableData(data))
+
   }, []);
-  console.log(tableData)
+  console.log(tableData);
 
   return (
     <>
@@ -176,43 +170,44 @@ export default function UserPage() {
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
+                <TableBody>
+                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                    const { id, first_name, last_name, department_name, email } = row;
+                    const selectedUser = selected.indexOf(first_name) !== -1;
 
-        <TableBody>
-        {applySortFilter(tableData, getComparator(order, orderBy), filterName).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => {
-        const isItemSelected = selected.indexOf(row.first_name) !== -1;
-        const labelId = `table-checkbox-${index}`;
-      return (
-        <TableRow
-          hover
-          onClick={(event) => handleClick(event, row.first_name)}
-          role="checkbox"
-          aria-checked={isItemSelected}
-          tabIndex={-1}
-          key={row.first_name}
-          selected={isItemSelected}
-        >
-          <TableCell padding="checkbox">
-            <Checkbox
-              checked={isItemSelected}
-              inputProps={{ 'aria-labelledby': labelId }}
-            />
-          </TableCell>
-          <TableCell>{index+1}</TableCell>
-          <TableCell component="th" id={labelId} scope="row">
-            {row.first_name}
-          </TableCell>
-          <TableCell>{row.last_name}</TableCell>
-          <TableCell>{row.department_name}</TableCell>
-          <TableCell>{row.email}</TableCell>
-         
-          <TableCell>
-            <Button  variant="contained" onClick={() => handleRowClick(row)}>view details</Button>
-          </TableCell>
-        </TableRow>
-      );
-       })}
-       </TableBody>
-                 {isNotFound && (
+                    return (
+                      <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
+                        <TableCell padding="checkbox">
+                          <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, first_name)} />
+                        </TableCell>
+
+                        <TableCell component="th" scope="row" padding="none">
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Avatar alt={first_name} src="" />
+                            <Typography variant="subtitle2" noWrap>
+                              {first_name}
+                            </Typography>
+                          </Stack>
+                        </TableCell>
+
+                        <TableCell align="left">{last_name}</TableCell>
+
+                        <TableCell align="left">{department_name}</TableCell>
+                        <TableCell align="left">{email}</TableCell>
+                        <TableCell align="right">
+                        <Button onClick={successAlert} variant="contained">More details</Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {emptyRows > 0 && (
+                    <TableRow style={{ height: 53 * emptyRows }}>
+                      <TableCell colSpan={6} />
+                    </TableRow>
+                  )}
+                </TableBody>
+
+                {isNotFound && (
                   <TableBody>
                     <TableRow>
                       <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
@@ -250,7 +245,89 @@ export default function UserPage() {
           />
         </Card>
       </Container>
-      
     </>
   );
 }
+
+
+
+
+// import React, { useState, useEffect ,useId} from 'react'
+// import { DataGrid,GridToolbarContainer, GridToolbarExport } from '@mui/x-data-grid'
+// import {  UserListToolbar } from '../sections/@dashboard/user';
+
+
+
+// function CustomToolbar() {
+//   return (
+//     <GridToolbarContainer>
+//       <GridToolbarExport />
+//     </GridToolbarContainer>
+//   );
+// }
+
+
+// const columns = [
+//   { field: 'id', headerName: 'ID' },
+//   { field: 'first_name', headerName: 'F.Name', width: 150 },
+//   { field: 'last_name', headerName: 'L.Name', width: 150},
+//   { field: 'department', headerName: 'Department', width: 150},
+//   { field: 'email', headerName: 'Email', width: 250 }
+// ]
+
+// const Test = () => {
+//     const id = useId();
+//     const [tableData, setTableData] = useState([])
+
+    
+//     const [deletedRows, setDeletedRows] = useState([]);
+
+//     useEffect(() => {
+//         fetch("http://10.151.1.111:8000/employee_app/api/v1/Employee/")
+//           .then((data) => data.json())
+//           .then((data) => setTableData(data))
+    
+//       }, [])
+    
+//       console.log(tableData);
+//   return (
+//     <>
+//        <UserListToolbar/>
+       
+//        <DataGrid
+//       sx={{
+//         boxShadow: 1,
+//         border: 1,
+//         search:"true",
+//         width: '800px',
+//         borderColor: 'primary.light',
+//         '& .MuiDataGrid-cell:hover': {
+//           color: 'primary.main',
+//         },
+//       }}
+//       rows={tableData}
+//       columns={columns}
+//       key={id}
+//       // pageSize={12}
+//       checkboxSelection
+//       onSelectionModelChange={({ selectionModel }) => {
+//         const rowIds = selectionModel.map(rowId => parseInt(String(rowId), 10));
+//         const rowsToDelete = tableData.filter(row => rowIds.includes(row.id));
+//         setDeletedRows(rowsToDelete);
+//         console.log(deletedRows);
+//       }}
+//       getRowClassName={(params) => `super-app-theme--${params.row.status}`}
+//       components={{
+//         Toolbar: CustomToolbar,
+//       }}
+//       pageSize={15}
+//       rowsPerPageOptions={[15]}
+//     />
+    
+  
+  
+//   </>
+//   )
+// }
+
+// export default Test
